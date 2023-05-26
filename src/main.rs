@@ -11,7 +11,7 @@ fn main() -> Result<(), eframe::Error> {
 
     // Our application state:
     let mut duration = 50;
-    let ele = Timer{duration: 10};
+    let timer = Timer{duration: 10};
 
     eframe::run_simple_native("Timer app", options, move |ctx, _frame| {
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -23,6 +23,9 @@ fn main() -> Result<(), eframe::Error> {
             if ui.button("-").clicked() {
                 duration += 1;
             }
+            if ui.button("x").clicked() {
+                timer.start_timer()
+            }
         });
     })
 }
@@ -33,7 +36,7 @@ struct Timer {
 }
 
 impl Timer {
-    fn start_timer(){
+    fn start_timer(self){
         todo!()
     }
 }
