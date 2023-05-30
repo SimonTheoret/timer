@@ -1,34 +1,9 @@
-use std::todo;
-
+use chrono::Duration;
 use eframe::egui;
+use std::todo;
+use timer::{Guard, Timer};
 
-// fn main() -> Result<(), eframe::Error> {
-
-//     let options = eframe::NativeOptions {
-//         initial_window_size: Some(egui::vec2(320.0, 240.0)),
-//         ..Default::default()
-//     };
-
-//     // Our application state:
-//     let mut duration = 50;
-//     let timer = Timer{duration: 10};
-
-//     eframe::run_simple_native("Timer app", options, move |ctx, _frame| {
-//         egui::CentralPanel::default().show(ctx, |ui| {
-//             ui.heading("Timer app");
-//             ui.add(egui::Slider::new(&mut duration, 0..=90).text("duration"));
-//             if ui.button("+").clicked() {
-//                 duration += 1;
-//             }
-//             if ui.button("-").clicked() {
-//                 duration += 1;
-//             }
-//             if ui.button("x").clicked() {
-//                 timer.start_timer()
-//             }
-//         });
-//     })
-// }
+const SEC_IN_MINUTE: i32 = 60;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
@@ -38,41 +13,78 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "Rust timer app",
         options,
-        Box::new(|_cc| Box::<Timer>::default()),
+        Box::new(|_cc| Box::<TimerWrapper>::default()),
     )
 }
 
-#[derive(Debug)]
-struct Timer {
+struct TimerWrapper {
+    timer: Timer,
     duration: i32,
 }
 
-impl Timer {
-    fn start_timer(self) {
+impl TimerWrapper {
+    fn new(timer: Timer, duration: i32, elapsed_time: i32, remaining_time: i32) -> TimerWrapper {
+        TimerWrapper {
+            timer,
+            duration,
+        }
+    }
+    fn start_timer(&self) {
+        todo!()
+    }
+    fn update_logger(&self, log: Log) {
+        todo!()
+    }
+    fn end_timer(&self) {
+        todo!()
+    }
+    fn update_all(&self) {
+        todo!()
+    }
+    fn schedule_with_delay_update(&self, delay: Duration) -> Guard {
+        // self.timer.schedule_with_delay(delay, closure here)
+        todo!()
+    }
+    fn schedule_repeating(&self, delay: Duration) -> Guard {
+        // self.timer.schedule_with_delay(Duration, cb)
         todo!()
     }
 }
 
-impl Default for Timer {
+impl Default for TimerWrapper {
     fn default() -> Self {
-        Self { duration: 50 }
+        Self {
+            timer: Timer::new(),
+            duration: 50,
+        }
     }
 }
 
-impl eframe::App for Timer {
+impl eframe::App for TimerWrapper {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Timer");
-            ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
+            ui.heading("Pomodoro");
+            ui.add(egui::Slider::new(&mut self.duration, 0..=120).text("minutes"));
+            ui.vertical_centered_justified(|ui| {
+
+                if ui.button("+").clicked() {
+                    self.duration += 1;
+                }
+                if ui.button("-").clicked() {
+                    self.duration -= 1;
+                }
             });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Click each year").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
         });
+    }
+}
+
+struct Log {
+    path_to_write: String,
+    frequency: i32, //TODO Make better
+}
+
+impl Default for Log {
+    fn default() -> Self {
+        todo!()
     }
 }

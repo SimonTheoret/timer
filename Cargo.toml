@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.24"
-eframe = "0.22.0"
+eframe = { version = "0.22.0" , features = ["default", "default_fonts"]}
 egui = "0.21.0"
 timer = "0.2.0"
