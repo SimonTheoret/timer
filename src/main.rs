@@ -1,90 +1,57 @@
-use chrono::Duration;
 use eframe::egui;
-use std::todo;
-use timer::{Guard, Timer};
+use std::sync::mpsc::channel;
+use std::{thread, println};
+use std::time::Duration;
 
-const SEC_IN_MINUTE: i32 = 60;
+const SEC_IN_MINUTE: f32 = 60.;
+const MAX_MINUTES: f32 = 120.;
 
 fn main() -> Result<(), eframe::Error> {
+    let timer = Timer::default();
     let options = eframe::NativeOptions {
+        resizable: false,
         initial_window_size: Some(egui::vec2(320.0, 240.0)),
         ..Default::default()
     };
-    eframe::run_native(
-        "Rust timer app",
-        options,
-        Box::new(|_cc| Box::<TimerWrapper>::default()),
-    )
+    eframe::run_native("Rust timer app", options, Box::new(|_cc| Box::new(timer)))
+}
+struct Timer {
+    duration: f32,
 }
 
-struct TimerWrapper {
-    timer: Timer,
-    duration: i32,
-}
-
-impl TimerWrapper {
-    fn new(timer: Timer, duration: i32, elapsed_time: i32, remaining_time: i32) -> TimerWrapper {
-        TimerWrapper {
-            timer,
-            duration,
+impl Timer {
+    fn start(&mut self) {
+        while self.duration * SEC_IN_MINUTE > 0. {
+            thread::sleep(Duration::from_secs(1));
+            self.duration -= 1./SEC_IN_MINUTE;
+            println!("{}", self.duration);
         }
-    }
-    fn start_timer(&self) {
-        todo!()
-    }
-    fn update_logger(&self, log: Log) {
-        todo!()
-    }
-    fn end_timer(&self) {
-        todo!()
-    }
-    fn update_all(&self) {
-        todo!()
-    }
-    fn schedule_with_delay_update(&self, delay: Duration) -> Guard {
-        // self.timer.schedule_with_delay(delay, closure here)
-        todo!()
-    }
-    fn schedule_repeating(&self, delay: Duration) -> Guard {
-        // self.timer.schedule_with_delay(Duration, cb)
-        todo!()
+        println!("Done")
     }
 }
 
-impl Default for TimerWrapper {
+impl Default for Timer {
     fn default() -> Self {
-        Self {
-            timer: Timer::new(),
-            duration: 50,
-        }
+        Self { duration: 50. }
     }
 }
 
-impl eframe::App for TimerWrapper {
+impl eframe::App for Timer {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Pomodoro");
-            ui.add(egui::Slider::new(&mut self.duration, 0..=120).text("minutes"));
+            ui.add(egui::Slider::new(&mut self.duration, 0.0..=MAX_MINUTES).text("Duration"));
             ui.vertical_centered_justified(|ui| {
-
                 if ui.button("+").clicked() {
-                    self.duration += 1;
+                    self.duration += 1.;
                 }
                 if ui.button("-").clicked() {
-                    self.duration -= 1;
+                    self.duration -= 1.;
+                }
+                if ui.button("Start timer").clicked() {
+                    self.start();
                 }
             });
         });
-    }
-}
-
-struct Log {
-    path_to_write: String,
-    frequency: i32, //TODO Make better
-}
-
-impl Default for Log {
-    fn default() -> Self {
-        todo!()
     }
 }
