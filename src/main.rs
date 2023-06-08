@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::{println, thread};
 
-const SEC_IN_MINUTE: f32 = 60.;
-const MAX_MINUTES: f32 = 120.;
+const SEC_IN_MINUTE: f64 = 60.;
+const MAX_MINUTES: f64 = 120.;
 
 fn main() -> Result<(), eframe::Error> {
     let mut timer = Timer::default();
@@ -16,14 +16,26 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native("Rust timer app", options, Box::new(|_cc| Box::new(timer)))
 }
 enum Durations {
-    MutExlusive(Arc<Mutex<f32>>),
-    FloatDuration(f32),
+    MutExlusive(Arc<Mutex<f64>>),
+    FloatDuration(f64),
 }
 impl Durations {
-    fn switch_type(self) -> Durations {
+    fn go_type_float(self) -> Result<Durations, &'static str> {
         match self {
-            Durations::MutExlusive(inside) => Durations::FloatDuration(*inside.lock().unwrap()),
-            Durations::FloatDuration(f32) => Durations::MutExlusive(Arc::new(Mutex::new(f32))),
+            Durations::MutExlusive(inside) => Ok(Durations::FloatDuration(*inside.lock().unwrap())),
+            Durations::FloatDuration(float) => {
+                Err("Is already of type Durations::FloatDuration(float)")
+            }
+            _ => Err("Wrong initial type"),
+        }
+    }
+    fn go_type_mutex(self) -> Result<Durations, &'static str> {
+        match self {
+            Durations::MutExlusive(inside) => {
+                Err("Is already of type Durations::MutExlusive(Arc<Mutex<float>>)")
+            }
+            Durations::FloatDuration(float) => Ok(Durations::MutExlusive(Arc::new(Mutex::new(float)))),
+            _ => Err("Wrong initial type"),
         }
     }
 }
@@ -34,6 +46,14 @@ struct Timer {
 impl Timer {
     fn start(&mut self) {
         todo!()
+    }
+    fn go_type_float(&mut self) {
+        self.duration = self.duration.go_type_float().unwrap() // Using unwrap because error
+        // handling is done in self.duration.go_type_float
+    }
+    fn go_type_mutex(&mut self) {
+        self.duration = self.duration.go_type_mutex().unwrap() // Using unwrap because error
+        // handling is done in self.duration.go_type_mutex
     }
 }
 
@@ -50,7 +70,7 @@ impl eframe::App for Timer {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Pomodoro");
             ui.add(
-                egui::Slider::new(&mut inside_duration.lock().unwrap(), 0.0..=MAX_MINUTES)
+                egui::Slider::new(&mut self.duration, 0.0..=MAX_MINUTES)
                     .text("Duration"),
             );
             ui.vertical_centered_justified(|ui| {
