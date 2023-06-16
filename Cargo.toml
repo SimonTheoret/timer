@@ -4,5 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.26"
+csv = "1.2.2"
+directories = "5.0.1"
 eframe = "0.22.0"
 egui = "0.22.0"

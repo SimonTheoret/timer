@@ -1,0 +1,39 @@
+use chrono::{Local, DatimeTime};
+use csv::Writer;
+use directories::BaseDirs;
+use std::error::Error;
+use std::fs::{create_dir_all, File};
+use std::path::PathBuf;
+
+pub struct Logger {
+    writer: Result<Writer<File>, Box<dyn Error>>,
+}
+
+impl Logger {
+    fn get_local_dir() -> Result<PathBuf, &'static str> {
+        if let Some(base_dirs) = BaseDirs::new() {
+            Ok(base_dirs.data_local_dir().join("pomodoro"))
+        } else {
+            Err("No home directory found! Make sure you have a home directory on your OS.")
+        }
+    }
+    fn create_pomodoro_dir() -> Result<Box<PathBuf>, Box<dyn Error>> {
+        let result = Logger::get_local_dir()?;
+        let path = result.as_path();
+        create_dir_all(path)?;
+        Ok(Box::new(result))
+    }
+    fn get_csv_writer() -> Result<Writer<File>, Box<dyn Error>> {
+        let path = Logger::create_pomodoro_dir();
+        Ok(Writer::from_path(path?.join("data.csv").as_path())?)
+    }
+    pub fn new() -> Logger {
+        Logger {
+            writer: Logger::get_csv_writer(),
+        }
+    }
+    pub fn write(&self, start_time: DateTime<Local>) -> Result<(), Box<dyn Error>> {
+        let writer = self.writer?;
+        let datetime = Local::now();
+    }
+}
