@@ -34,19 +34,19 @@ impl Logger {
             start_time,
         }
     }
-    pub fn write(&self) -> Result<(), Box<dyn Error>> {
-        let writer = self.writer.as_ref(); // BUG: plz fix
-        let start_time = self.start_time;
-        let now = Local::now();
-        let duration = now - start_time;
-        let (start_time, now, duration) = (
-            start_time.to_rfc3339(),
-            now.to_rfc3339(),
-            duration.to_string(),
-        );
-        if let Ok(csv_writer) = writer {
-            csv_writer.write_record(&[start_time, now, duration])?;
+    pub fn write(&mut self) -> Result<(), Box<dyn Error>> {
+        if self.writer.is_ok() {
+            let start_time = self.start_time;
+            let now = Local::now();
+            let duration = now - start_time;
+            let (start_time, now, duration) = (
+                start_time.to_rfc3339(),
+                now.to_rfc3339(),
+                duration.to_string(),
+            );
+            self.writer.as_mut().unwrap().write_record(&[start_time, now, duration])?;
         }
+
         Ok(())
     }
 }

@@ -1,4 +1,3 @@
-use chrono::Local;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -30,7 +29,6 @@ impl Timer {
     fn start(&mut self, ctx: &egui::Context) {
         self.init_duration = self.duration.lock().unwrap().clone();
         *self.stop_thread.lock().unwrap() = false;
-        self.logger = Option::Some(Logger::new(Local::now()));
         let duration_clone = Arc::clone(&self.duration);
         let stop_thread_clone = Arc::clone(&self.stop_thread);
         let widget_visible_clone = Arc::clone(&self.widget_visible);
@@ -52,11 +50,11 @@ impl Timer {
                 }
                 thread::sleep(sleep_duration);
             }
-
             *stop_thread_clone.lock().unwrap() = true;
             *widget_visible_clone.lock().unwrap() = true;
             context.request_repaint();
         });
+
         // self.set_widget_state_true();
         // self.stop(); // used for ending of method
     }
@@ -88,10 +86,11 @@ impl Timer {
         }
     }
 }
-fn stop(timer: &Timer)-> Result<(), Box<dyn Error>> {
+
+fn stop(timer: &mut Timer) -> Result<(), Box<dyn Error>> {
     let mut thread_on_pause = timer.stop_thread.lock().unwrap();
     if timer.logger_is_on() {
-        timer.logger.as_ref().unwrap().write()?
+        timer.logger.as_mut().unwrap().write()?;
     }
     *thread_on_pause = true;
     Ok(())
@@ -129,7 +128,7 @@ impl eframe::App for Timer {
                 });
                 ui.add_visible_ui(!self.widget_state(), |ui| {
                     if ui.button("Stop timer").clicked() {
-                        stop(&self);
+                        let _ = stop(self);
                     }
                 })
             });
