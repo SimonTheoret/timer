@@ -1,4 +1,0 @@
-*TODO*
-- (x) Modify start procedure for timer with logger
-- (x) Fix bug in logger.rs
-- ( ) Include stop procedure in start sequence

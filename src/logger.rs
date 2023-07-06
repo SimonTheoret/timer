@@ -1,52 +1,76 @@
 use chrono::{DateTime, Local};
 use csv::Writer;
 use directories::BaseDirs;
-use std::error::Error;
-use std::fs::{create_dir_all, File};
+use std::fs::{create_dir_all, File, OpenOptions};
 use std::path::PathBuf;
 
 pub struct Logger {
-    writer: Result<Writer<File>, Box<dyn Error>>,
+    writer: Writer<File>,
     start_time: DateTime<Local>,
 }
 
 impl Logger {
-    fn get_local_dir() -> Result<PathBuf, &'static str> {
+    pub fn new() -> Option<Logger> {
+        let start_time = Local::now();
+        let writer = match Logger::get_csv_writer() {
+            None => return None,
+            Some(writer) => writer,
+        };
+        Some(Logger { writer, start_time })
+    }
+    fn get_local_dir() -> Option<PathBuf> {
         if let Some(base_dirs) = BaseDirs::new() {
-            Ok(base_dirs.data_local_dir().join("pomodoro"))
+            Some(base_dirs.data_local_dir().join("pomodoro"))
         } else {
-            Err("No home directory found! Make sure you have a home directory on your OS.")
+            eprintln!("No home directory found! Make sure you have a home directory on your OS.");
+            None
         }
     }
-    fn create_pomodoro_dir() -> Result<Box<PathBuf>, Box<dyn Error>> {
-        let result = Logger::get_local_dir()?;
-        let path = result.as_path();
-        create_dir_all(path)?;
-        Ok(Box::new(result))
-    }
-    fn get_csv_writer() -> Result<Writer<File>, Box<dyn Error>> {
-        let path = Logger::create_pomodoro_dir();
-        Ok(Writer::from_path(path?.join("data.csv").as_path())?)
-    }
-    pub fn new(start_time: DateTime<Local>) -> Logger {
-        Logger {
-            writer: Logger::get_csv_writer(),
-            start_time,
-        }
-    }
-    pub fn write(&mut self) -> Result<(), Box<dyn Error>> {
-        if self.writer.is_ok() {
-            let start_time = self.start_time;
-            let now = Local::now();
-            let duration = now - start_time;
-            let (start_time, now, duration) = (
-                start_time.to_rfc3339(),
-                now.to_rfc3339(),
-                duration.to_string(),
-            );
-            self.writer.as_mut().unwrap().write_record(&[start_time, now, duration])?;
-        }
 
-        Ok(())
+    fn create_pomodoro_dir() -> Option<PathBuf> {
+        let directory = match Logger::get_local_dir() {
+            Some(dir) => dir,
+            _ => return None,
+        };
+        match create_dir_all(directory.as_path()) {
+            Ok(()) => (),
+            Err(_) => eprintln!("Could not create the directories"),
+        };
+        let path = directory.join("data.csv");
+        Some(path)
+    }
+
+    fn get_csv_writer() -> Option<Writer<File>> {
+        if Logger::create_pomodoro_dir() == None {
+            return None;
+        }
+        let path_buf = Logger::create_pomodoro_dir().unwrap();
+        let file = match OpenOptions::new().append(true).open(path_buf) {
+            Ok(file) => file,
+            Err(_) => return None,
+        };
+        Some(Writer::from_writer(file))
+    }
+    #[allow(unused_must_use)]
+    pub fn write(&mut self) {
+        let start_time = self.start_time;
+        let now = Local::now();
+        let duration = now - start_time;
+        let (start_time, now, duration) = (
+            start_time.to_rfc3339(),
+            now.to_rfc3339(),
+            duration.to_string(),
+        );
+        match self.writer.write_record(&[start_time, now, duration]) {
+            Ok(()) => println!("writing !"),
+            Err(_) => eprintln!("Cannot write. Why? I'm not sure..."),
+        }
+        self.writer.flush();
+    }
+}
+pub fn conditional_write(logger_option: &mut Option<Logger>) {
+    match logger_option {
+        Some(logger) => logger.write(),
+        None => (),
     }
 }
