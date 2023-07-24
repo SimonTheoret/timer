@@ -2,7 +2,7 @@ use crate::guistate::GuiState;
 use crate::logger::{conditional_write, Logger};
 use crate::state_object::StateObject;
 use crate::timer::Timer;
-use notify_rust::Notification;
+use notify_rust::{Notification, Timeout};
 use soloud::*;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -75,15 +75,18 @@ impl Pomodoro {
         self.tx_counting_down.as_ref().unwrap().send(false);
         match Notification::new()
             .summary("Rust timer:")
-            .body("Working period is done!")
+            .body("Working period is done! \nTime to take a break")
+            .appname("Rust timer")
+            .timeout(Timeout::Never)
             .show()
         {
             Ok(_) => (),
             Err(_) => (),
         }
-        let sl = Soloud::default().unwrap();
+        let mut sl = Soloud::default().unwrap();
         let mut wav = audio::Wav::default();
-        wav.load_mem(include_bytes!("./mixkit-interface-hint-notification-911.wav")).unwrap();
+        sl.set_global_volume(3.0);
+        wav.load_mem(include_bytes!("mixkit-interface-hint-notification-911.wav")).unwrap();
         sl.play(&wav);
     }
     fn update_gui_state(&mut self) {

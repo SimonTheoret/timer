@@ -1,6 +1,6 @@
 use crate::guistate::GuiState;
 use crate::state_object::StateObject;
-use notify_rust::Notification;
+use notify_rust::{Notification, Timeout};
 use soloud::*;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
@@ -46,15 +46,24 @@ impl Timer {
         self.send_state();
         match Notification::new()
             .summary("Rust timer:")
-            .body("Working period is done!")
+            .body("Working period is done! \nTime to take a break")
+            .appname("Rust timer")
+            .timeout(Timeout::Never)
             .show()
         {
             Ok(_) => (),
             Err(_) => (),
         }
-        let sl = Soloud::default().unwrap();
+        let mut sl = Soloud::default().unwrap();
         let mut wav = audio::Wav::default();
-        wav.load_mem(include_bytes!("./mixkit-interface-hint-notification-911.wav")).unwrap();
+        sl.set_global_volume(3.0);
+        wav.load_mem(include_bytes!(
+            "./mixkit-interface-hint-notification-911.wav"
+        ))
+        .unwrap();
         sl.play(&wav);
+        while sl.voice_count() > 0 {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+        }
     }
 }
