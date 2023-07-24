@@ -1,8 +1,9 @@
-use std::sync::mpsc::{Receiver, Sender};
-use std::thread;
-
 use crate::guistate::GuiState;
 use crate::state_object::StateObject;
+use notify_rust::Notification;
+use soloud::*;
+use std::sync::mpsc::{Receiver, Sender};
+use std::thread;
 
 pub struct Timer {
     state: StateObject,
@@ -41,6 +42,19 @@ impl Timer {
             }
         }
         self.state.gui_state = GuiState::OptionMenu;
+        self.state.duration = 0.;
         self.send_state();
+        match Notification::new()
+            .summary("Rust timer:")
+            .body("Working period is done!")
+            .show()
+        {
+            Ok(_) => (),
+            Err(_) => (),
+        }
+        let sl = Soloud::default().unwrap();
+        let mut wav = audio::Wav::default();
+        wav.load_mem(include_bytes!("./mixkit-interface-hint-notification-911.wav")).unwrap();
+        sl.play(&wav);
     }
 }

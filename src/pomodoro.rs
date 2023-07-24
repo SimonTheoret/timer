@@ -2,6 +2,8 @@ use crate::guistate::GuiState;
 use crate::logger::{conditional_write, Logger};
 use crate::state_object::StateObject;
 use crate::timer::Timer;
+use notify_rust::Notification;
+use soloud::*;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
@@ -71,6 +73,18 @@ impl Pomodoro {
     #[allow(unused_must_use)]
     pub fn stop(&mut self) {
         self.tx_counting_down.as_ref().unwrap().send(false);
+        match Notification::new()
+            .summary("Rust timer:")
+            .body("Working period is done!")
+            .show()
+        {
+            Ok(_) => (),
+            Err(_) => (),
+        }
+        let sl = Soloud::default().unwrap();
+        let mut wav = audio::Wav::default();
+        wav.load_mem(include_bytes!("./mixkit-interface-hint-notification-911.wav")).unwrap();
+        sl.play(&wav);
     }
     fn update_gui_state(&mut self) {
         if self.rx_state.is_some() {
@@ -90,7 +104,7 @@ impl eframe::App for Pomodoro {
             if self.state.duration <= 1./60. && self.state.gui_state == GuiState::CountingDown {
                 conditional_write(&mut self.logger);
                 self.kill_logger();
-            }; //TODO: Do not call conditional_write() every time
+            }; //TODO: Do not call conditional_write() every time. BUG: <--
             ctx.request_repaint();
             let duration = self.state.duration;
             ui.heading("Pomodoro");
