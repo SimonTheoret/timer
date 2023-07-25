@@ -1,4 +1,5 @@
 use crate::guistate::GuiState;
+use crate::logger::{conditional_write, Logger};
 use crate::state_object::StateObject;
 use notify_rust::{Notification, Timeout};
 use soloud::*;
@@ -9,6 +10,7 @@ pub struct Timer {
     state: StateObject,
     rx_counting_down: Receiver<bool>,
     tx_state: Sender<StateObject>,
+    logger: Option<Logger>,
 }
 impl Timer {
     pub fn new(
@@ -20,6 +22,7 @@ impl Timer {
             state,
             rx_counting_down,
             tx_state,
+            logger: Logger::new(),
         }
     }
     fn send_state(&self) {
@@ -28,6 +31,9 @@ impl Timer {
     }
     fn handle_message(&self) -> bool {
         self.rx_counting_down.try_recv().unwrap_or_else(|_err| true)
+    }
+    fn kill_logger(&mut self) {
+        self.logger = None
     }
     pub fn count_down(&mut self) {
         let mut counting_down = self.handle_message();
@@ -42,6 +48,10 @@ impl Timer {
             }
         }
         self.state.gui_state = GuiState::OptionMenu;
+        if self.state.duration <= 1. / 60.{
+            conditional_write(&mut self.logger);
+            self.kill_logger();
+        }
         self.state.duration = 0.;
         self.send_state();
         match Notification::new()

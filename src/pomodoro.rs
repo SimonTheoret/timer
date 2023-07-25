@@ -105,9 +105,8 @@ impl eframe::App for Pomodoro {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.update_gui_state();
             if self.state.duration <= 1./60. && self.state.gui_state == GuiState::CountingDown {
-                conditional_write(&mut self.logger);
                 self.kill_logger();
-            }; //TODO: Do not call conditional_write() every time. BUG: <--
+            };
             ctx.request_repaint();
             let duration = self.state.duration;
             ui.heading("Pomodoro");
