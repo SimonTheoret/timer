@@ -1,2 +1,2 @@
 # timer
-GUI timer in rust
+Timer written entirely in rust
