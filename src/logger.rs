@@ -39,19 +39,25 @@ impl Logger {
         let path = directory.join("data.csv");
         Some(path)
     }
-
     fn get_csv_writer() -> Option<Writer<File>> {
         if Logger::create_pomodoro_dir() == None {
             return None;
         }
         let path_buf = Logger::create_pomodoro_dir().unwrap();
-        let file = match OpenOptions::new().append(true).open(path_buf) {
-            Ok(file) => file,
-            Err(_) => return None,
-        };
-        Some(Writer::from_writer(file))
+        let file = OpenOptions::new().create(true).append(true).open(path_buf);
+        if let Err(err) = file {
+            eprintln!("{err}");
+            return None
+        } else {
+            Some(Writer::from_writer(file.unwrap()))
+        }
+
+        // let file2 = match file {
+        //     Ok(file) => file,
+        //     Err(err) => return None,
+        // };
     }
-    #[allow(unused_must_use)]
+
     pub fn write(&mut self) {
         let start_time = self.start_time;
         let now = Local::now();
