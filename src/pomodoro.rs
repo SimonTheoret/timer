@@ -73,20 +73,19 @@ impl Pomodoro {
     #[allow(unused_must_use)]
     pub fn stop(&mut self) {
         self.tx_counting_down.as_ref().unwrap().send(false);
-        match Notification::new()
+        if Notification::new()
             .summary("Rust timer:")
             .body("Working period is done! \nTime to take a break")
             .appname("Rust timer")
             .timeout(Timeout::Never)
-            .show()
+            .show().is_ok()
         {
-            Ok(_) => (),
-            Err(_) => (),
         }
         let mut sl = Soloud::default().unwrap();
         let mut wav = audio::Wav::default();
         sl.set_global_volume(3.0);
-        wav.load_mem(include_bytes!("mixkit-interface-hint-notification-911.wav")).unwrap();
+        wav.load_mem(include_bytes!("mixkit-interface-hint-notification-911.wav"))
+            .unwrap();
         sl.play(&wav);
     }
     fn update_gui_state(&mut self) {
@@ -104,7 +103,7 @@ impl eframe::App for Pomodoro {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.update_gui_state();
-            if self.state.duration <= 1./60. && self.state.gui_state == GuiState::CountingDown {
+            if self.state.duration <= 1. / 60. && self.state.gui_state == GuiState::CountingDown {
                 self.kill_logger();
             };
             ctx.request_repaint();

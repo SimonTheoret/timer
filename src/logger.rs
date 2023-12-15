@@ -40,14 +40,12 @@ impl Logger {
         Some(path)
     }
     fn get_csv_writer() -> Option<Writer<File>> {
-        if Logger::create_pomodoro_dir() == None {
-            return None;
-        }
+        Logger::create_pomodoro_dir()?;
         let path_buf = Logger::create_pomodoro_dir().unwrap();
         let file = OpenOptions::new().create(true).append(true).open(path_buf);
         if let Err(err) = file {
             eprintln!("{err}");
-            return None
+             None
         } else {
             Some(Writer::from_writer(file.unwrap()))
         }
