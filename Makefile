@@ -1,2 +1,4 @@
-install: src/main.rs
-    cargo build --release
+install:
+	cargo build --release
+	mv ./target/release/timer_rust .
+	mv timer_rust timer
